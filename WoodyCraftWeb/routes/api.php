@@ -3,18 +3,13 @@
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Route;
 use App\Http\Controllers\Api\PuzzleController;
-/*
-|--------------------------------------------------------------------------
-| API Routes
-|--------------------------------------------------------------------------
-|
-| Here is where you can register API routes for your application. These
-| routes are loaded by the RouteServiceProvider and all of them will
-| be assigned to the "api" middleware group. Make something great!
-|
-*/
+use App\Http\Controllers\Api\PanierController;
 
+// Puzzles
 Route::apiResource('puzzles', PuzzleController::class);
-Route::middleware('auth:sanctum')->get('/user', function (Request $request) {
-    return $request->user();
+
+// Paniers
+Route::prefix('paniers')->group(function () {
+    Route::get('/', [PanierController::class, 'index']);       // Tous les paniers en cours
+    Route::post('/', [PanierController::class, 'store']);     // Créer
 });
