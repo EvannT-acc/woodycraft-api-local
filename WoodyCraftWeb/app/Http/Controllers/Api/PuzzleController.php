@@ -11,7 +11,7 @@ class PuzzleController extends Controller
     // GET /api/puzzles
     public function index()
     {
-        $puzzles = Puzzle::orderBy('id', 'desc')->get(); // ✅ Mathis : tri par id desc
+        $puzzles = Puzzle::orderBy('id', 'desc')->get();
         return response()->json($puzzles, 200);
     }
 
@@ -20,11 +20,11 @@ class PuzzleController extends Controller
     {
         $validated = $request->validate([
             'nom'          => 'required|string|max:255',
-            'categorie_id' => 'required|integer|exists:categories,id', // ✅ Mathis : vérifie que la catégorie existe
+            'categorie_id' => 'required|integer|exists:categories,id',
             'description'  => 'required|string|max:500',
             'image'        => 'required|string|max:255',
-            'prix'         => 'required|numeric|min:0',                // ✅ Mathis : plus flexible
-            'stock'        => 'required|integer|min:0',                // ✅ Mathis : min:0 pour stock
+            'prix'         => 'required|numeric|min:0',
+            'stock'        => 'required|integer|min:0',
         ]);
 
         $puzzle = Puzzle::create($validated);
@@ -38,7 +38,7 @@ class PuzzleController extends Controller
     // GET /api/puzzles/{id}
     public function show(string $id)
     {
-        $puzzle = Puzzle::find($id); // ✅ Mathis : gestion 404 manuelle plus propre pour API
+        $puzzle = Puzzle::find($id);
 
         if (!$puzzle) {
             return response()->json([
