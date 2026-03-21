@@ -3,82 +3,95 @@
 namespace App\Http\Controllers\Api;
 
 use App\Http\Controllers\Controller;
-use Illuminate\Http\Request;
 use App\Models\Puzzle;
+use Illuminate\Http\Request;
 
 class PuzzleController extends Controller
 {
     // GET /api/puzzles
     public function index()
     {
-        return response()->json(Puzzle::all());
+        $puzzles = Puzzle::orderBy('id', 'desc')->get(); // ✅ Mathis : tri par id desc
+        return response()->json($puzzles, 200);
     }
 
     // POST /api/puzzles
     public function store(Request $request)
     {
         $validated = $request->validate([
-            'nom' => 'required|max:100',
-            'categorie_id' => 'required|integer',
-            'description' => 'required|max:500',
-            'image' => 'required|max:255',
-            'prix' => 'required|numeric|between:0,99.99',
-            'stock'=> 'required|integer|between:1,99'
+            'nom'          => 'required|string|max:255',
+            'categorie_id' => 'required|integer|exists:categories,id', // ✅ Mathis : vérifie que la catégorie existe
+            'description'  => 'required|string|max:500',
+            'image'        => 'required|string|max:255',
+            'prix'         => 'required|numeric|min:0',                // ✅ Mathis : plus flexible
+            'stock'        => 'required|integer|min:0',                // ✅ Mathis : min:0 pour stock
         ]);
 
         $puzzle = Puzzle::create($validated);
 
         return response()->json([
             'message' => 'Puzzle créé avec succès',
-            'data' => $puzzle
+            'data'    => $puzzle
         ], 201);
     }
 
     // GET /api/puzzles/{id}
     public function show(string $id)
-{
-    $puzzle = Puzzle::select(
-        'id',
-        'nom',
-        'description',
-        'image',
-        'prix',
-        'stock'
-    )->findOrFail($id);
+    {
+        $puzzle = Puzzle::find($id); // ✅ Mathis : gestion 404 manuelle plus propre pour API
 
-    return response()->json($puzzle);
-}
+        if (!$puzzle) {
+            return response()->json([
+                'message' => 'Puzzle introuvable'
+            ], 404);
+        }
+
+        return response()->json($puzzle, 200);
+    }
 
     // PUT /api/puzzles/{id}
     public function update(Request $request, string $id)
     {
-        $puzzle = Puzzle::findOrFail($id);
+        $puzzle = Puzzle::find($id);
+
+        if (!$puzzle) {
+            return response()->json([
+                'message' => 'Puzzle introuvable'
+            ], 404);
+        }
 
         $validated = $request->validate([
-            'nom' => 'required|max:100',
-            'categorie_id' => 'required|integer',
-            'description' => 'required|max:500',
-            'image' => 'required|max:255',
-            'prix' => 'required|numeric|between:0,99.99',
-            'stock'=> 'required|integer|between:1,99'
+            'nom'          => 'required|string|max:255',
+            'categorie_id' => 'required|integer|exists:categories,id',
+            'description'  => 'required|string|max:500',
+            'image'        => 'required|string|max:255',
+            'prix'         => 'required|numeric|min:0',
+            'stock'        => 'required|integer|min:0',
         ]);
 
         $puzzle->update($validated);
 
         return response()->json([
             'message' => 'Puzzle mis à jour',
-            'data' => $puzzle
-        ]);
+            'data'    => $puzzle
+        ], 200);
     }
 
     // DELETE /api/puzzles/{id}
     public function destroy(string $id)
     {
-        $puzzle = Puzzle::findOrFail($id);
+        $puzzle = Puzzle::find($id);
+
+        if (!$puzzle) {
+            return response()->json([
+                'message' => 'Puzzle introuvable'
+            ], 404);
+        }
+
         $puzzle->delete();
 
         return response()->json([
-            'message' => 'Puzzle supprimé'
-        ]);
+            'message' => 'Puzzle supprimé avec succès'
+        ], 200);
     }
 }

@@ -11,17 +11,17 @@ class Puzzle extends Model
 
     protected $fillable = [
         'nom',
-        'categorie',
+        'categorie_id',
         'description',
-        'prix',
         'image',
+        'prix',
         'stock',
     ];
 
     // Relation avec la catégorie
     public function categorie()
     {
-        return $this->belongsTo(Categorie::class);
+        return $this->belongsTo(Categorie::class, 'categorie_id');
     }
 
     // Relation avec Panier via la table pivot "appartient"
