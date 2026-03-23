@@ -23,6 +23,8 @@ API REST Laravel pour le projet **WoodyCraftWeb**.
 | GET | `/api/dashboard/stock-bas` | Puzzles en stock bas |
 | GET | `/api/dashboard/stats-ventes` | Statistiques de ventes |
 | GET | `/api/dashboard/top-puzzles` | Top 5 puzzles les plus vendus |
+| GET | `/api/dashboard/stocks` | Liste des stocks disponibles |
+
 
 ---
 
