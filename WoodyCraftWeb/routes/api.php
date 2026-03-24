@@ -4,6 +4,7 @@ use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Route;
 use App\Http\Controllers\Api\PuzzleController;
 use App\Http\Controllers\Api\PanierController;
+<<<<<<< HEAD
 use App\Http\Controllers\Api\DashboardController;
 use App\Http\Controllers\Api\StockController;
 
@@ -39,3 +40,14 @@ Route::prefix('dashboard')->group(function () {
 Route::middleware('auth:sanctum')->get('/user', function (Request $request) {
     return $request->user();
 });
+=======
+
+// Puzzles
+Route::apiResource('puzzles', PuzzleController::class);
+
+// Paniers
+Route::prefix('paniers')->group(function () {
+    Route::get('/', [PanierController::class, 'index']);       // Tous les paniers en cours
+    Route::post('/', [PanierController::class, 'store']);     // Créer
+});
+>>>>>>> 8b084609477424c13c6d336d0cdb03c945478699

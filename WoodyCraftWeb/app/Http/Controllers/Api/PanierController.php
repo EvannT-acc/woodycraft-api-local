@@ -5,23 +5,35 @@ namespace App\Http\Controllers\Api;
 use App\Http\Controllers\Controller;
 use Illuminate\Http\Request;
 use App\Models\Panier;
+<<<<<<< HEAD
 use Illuminate\Http\JsonResponse;
+=======
+>>>>>>> 8b084609477424c13c6d336d0cdb03c945478699
 
 class PanierController extends Controller
 {
     /**
      * GET /api/paniers
+<<<<<<< HEAD
      * Retourne tous les paniers en cours
      * → Théotime
      */
     public function index()
     {
         $paniers = Panier::select('id', 'statut')
+=======
+     * Retourne tous les paniers en cours (ID seulement)
+     */
+    public function index()
+    {
+        $paniers = Panier::select('id','statut')
+>>>>>>> 8b084609477424c13c6d336d0cdb03c945478699
                          ->where('statut', 'en cours')
                          ->get();
 
         return response()->json([
             'message' => 'Liste des paniers en cours',
+<<<<<<< HEAD
             'data'    => $paniers
         ]);
     }
@@ -31,25 +43,44 @@ class PanierController extends Controller
      * Créer un nouveau panier
      * → Théotime
      */
+=======
+            'data' => $paniers
+        ]);
+    }
+     
+>>>>>>> 8b084609477424c13c6d336d0cdb03c945478699
     public function store(Request $request)
     {
         $validated = $request->validate([
             'user_id' => 'required|integer',
+<<<<<<< HEAD
             'statut'  => 'required|string|in:en cours,terminé'
+=======
+            'statut' => 'required|string|in:en cours,terminé'
+>>>>>>> 8b084609477424c13c6d336d0cdb03c945478699
         ]);
 
         $panier = Panier::create([
             'user_id' => $validated['user_id'],
+<<<<<<< HEAD
             'statut'  => $validated['statut']
+=======
+            'statut' => $validated['statut']
+>>>>>>> 8b084609477424c13c6d336d0cdb03c945478699
         ]);
 
         return response()->json([
             'message' => 'Panier créé avec succès',
+<<<<<<< HEAD
             'data'    => $panier
+=======
+            'data' => $panier
+>>>>>>> 8b084609477424c13c6d336d0cdb03c945478699
         ], 201);
     }
 
     /**
+<<<<<<< HEAD
      * GET /api/paniers/{id}
      * Détail complet d'une commande
      * → Evann
@@ -178,4 +209,10 @@ public function destroy(int $id): JsonResponse
         'message' => 'Commande supprimée avec succès'
     ]);
 }
+=======
+     * PUT /api/paniers/{id}
+     * Met à jour le statut du panier
+     */
+
+>>>>>>> 8b084609477424c13c6d336d0cdb03c945478699
 }
