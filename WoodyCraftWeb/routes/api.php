@@ -15,7 +15,12 @@ Route::prefix('paniers')->group(function () {
     Route::get('/',     [PanierController::class, 'index']); // GET  /api/paniers
     Route::post('/',    [PanierController::class, 'store']); // POST /api/paniers
     Route::get('/{id}', [PanierController::class, 'show']);  // GET  /api/paniers/{id}
+    Route::put('/{id}/validate', [PanierController::class, 'validatePanier']);
+    Route::put('/{id}/checkout', [PanierController::class, 'checkout']);
+    Route::delete('/{id}', [PanierController::class, 'destroy']);
 });
+
+
 
 // --- Stocks ------------------------------------------------------------------
 Route::get('/stocks',        [StockController::class, 'index']);  // GET   /api/stocks

@@ -107,4 +107,75 @@ class PanierController extends Controller
             'nb_articles'       => $articles->count(),
         ]);
     }
+
+    public function validatePanier(int $id): JsonResponse
+    {
+        $panier = Panier::find($id);
+
+        if (!$panier) {
+            return response()->json([
+                'message' => 'Commande introuvable'
+            ], 404);
+        }
+
+        // vérifier qu'il est en cours
+        if ($panier->statut !== 'en cours') {
+            return response()->json([
+                'message' => 'Cette commande ne peut pas etre validee'
+            ], 400);
+        }
+
+        // update statut
+        $panier->statut = 'validé';
+        $panier->save();
+
+        return response()->json([
+            'message' => 'Commande validee avec succes',
+            'data'    => $panier
+        ]);
+    }
+
+    public function checkout(int $id): JsonResponse
+    {
+        $panier = Panier::find($id);
+
+        if (!$panier) {
+            return response()->json([
+                'message' => 'Commande introuvable'
+            ], 404);
+        }
+
+        // vérifier qu'il est en cours
+        if ($panier->statut !== 'validé') {
+            return response()->json([
+                'message' => 'Cette commande ne peut pas etre expedier'
+            ], 400);
+        }
+
+        // update statut
+        $panier->statut = 'expédiée';
+        $panier->save();
+
+        return response()->json([
+            'message' => 'Commande expediee avec succes',
+            'data'    => $panier
+        ]);
+    }
+
+public function destroy(int $id): JsonResponse
+{
+    $panier = Panier::find($id);
+
+    if (!$panier) {
+        return response()->json([
+            'message' => 'Commande introuvable'
+        ], 404);
+    }
+
+    $panier->delete();
+
+    return response()->json([
+        'message' => 'Commande supprimée avec succès'
+    ]);
+}
 }
