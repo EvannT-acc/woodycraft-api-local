@@ -9,18 +9,29 @@ class Panier extends Model
 {
     use HasFactory;
 
-    protected $fillable = ['statut', 'total', 'mode_paiement', 'user_id'];
+    protected $table = 'paniers';
 
-    // Relation avec Puzzle via table pivot "appartient"
-    public function puzzles()
-    {
-        return $this->belongsToMany(Puzzle::class, 'appartient')
-                    ->withPivot('quantite');
-    }
+    protected $fillable = [
+        'statut',
+        'total',
+        'mode_paiement',
+        'user_id',
+        'created_at',
+        'updated_at',
+    ];
 
-    // Relation avec User
     public function user()
     {
-        return $this->belongsTo(User::class);
+        return $this->belongsTo(User::class, 'user_id');
+    }
+
+    public function puzzles()
+    {
+        return $this->belongsToMany(
+            Puzzle::class,
+            'appartient',
+            'panier_id',
+            'puzzle_id'
+        )->withPivot('quantite');
     }
 }

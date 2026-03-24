@@ -9,14 +9,22 @@ class Adresse extends Model
 {
     use HasFactory;
 
-    protected $table = 'adresses'; // obligatoire pour être sûr
+    protected $table = 'adresses';
 
     protected $fillable = [
-        'user_id', 'nom', 'rue', 'ville', 'code_postal', 'pays'
+        'user_id',
+        'nom',
+        'rue',
+        'ville',
+        'code_postal',
+        'pays',
+        'numero',
+        'created_at',
+        'updated_at',
     ];
 
     public function user()
     {
-        return $this->belongsTo(User::class);
+        return $this->belongsTo(User::class, 'user_id');
     }
 }

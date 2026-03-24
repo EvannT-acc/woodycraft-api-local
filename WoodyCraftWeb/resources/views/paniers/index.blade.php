@@ -1,109 +1,101 @@
 <x-app-layout>
-    <x-slot name="header">
-        <h2 class="font-semibold text-xl text-gray-800 leading-tight">
-            @lang('Panier')
-        </h2>
-    </x-slot>
+    {{-- Fond et conteneur comme sur welcome.blade.php --}}
+    <div class="flex flex-col items-center min-h-screen px-4 pt-28 pb-16 bg-gradient-to-b from-[#f7ede2] via-[#e4d7c3] to-[#c9b39b]">
+        <div class="max-w-6xl w-full">
 
-    <div class="container flex justify-center mx-auto">
-        <div class="flex flex-col">
-            <div class="bg-gray-100 p-4 rounded shadow w-1/2">
-                <h3 class="font-semibold mb-2">Adresse de livraison :</h3>
-                @if ($adresse)
-                    <p>{{ $adresse->nom }},{{ $adresse->rue }},{{ $adresse->ville }}, {{ $adresse->code_postal }},{{ $adresse->pays }}</p>
+            {{-- En-tête stylé --}}
+            <header class="mb-8 text-center">
+                <h1 class="text-4xl md:text-5xl font-extrabold text-[#1e3b57] tracking-tight">
+                    Mon <span class="text-[#3aa3e3]">Panier</span>
+                </h1>
+                <p class="mt-2 text-[#1f3b57]/80">Vérifie tes articles avant le paiement.</p>
+            </header>
+
+            {{-- Carte principale (glass) --}}
+            <section class="bg-white/80 backdrop-blur-lg rounded-3xl shadow-2xl border border-white/30 px-6 md:px-10 py-8">
+
+                @if(empty($panier))
+                    <div class="text-center py-10">
+                        <p class="text-[#1f3b57]/80 text-lg">Ton panier est vide pour le moment.</p>
+                        <a href="{{ route('puzzles.index') }}"
+                           class="inline-flex items-center gap-2 mt-6 px-6 py-3 rounded-2xl font-semibold bg-[#3aa3e3] text-white hover:opacity-90 transition active:scale-95">
+                            Continuer les achats
+                        </a>
+                    </div>
                 @else
-                    <p class="text-gray-500 italic">Aucune adresse enregistrée pour le moment.</p>
-                @endif
-            </div>
-            <div class="w-full">
-                <div class="flex justify-between items-center mb-4">
-                    <a href="{{ route('adresses.store') }}" 
-                    class="bg-green-600 text-white px-4 py-2 rounded hover:bg-green-700">
-                        @lang('Ajouter / Modifier l’adresse de livraison')
-                    </a>
-                </div>
-            </div>
-
-
-                    <table>
-                        <thead class="bg-gray-50">
-                            <tr>
-                                <th class="px-2 py-2 text-xs text-gray-500">#</th>
-                                <th class="px-2 py-2 text-xs text-gray-500">Nom</th>
-                                <th class="px-2 py-2 text-xs text-gray-500">Prix</th>
-                                <th class="px-2 py-2 text-xs text-gray-500">Quentité</th>
-                                <th class="px-2 py-2 text-xs text-gray-500">Total</th>
-                                <th class="px-2 py-2 text-xs text-gray-500">Option</th>
-
-                            </tr>
-                        </thead>
-                        <tbody class="bg-white">
-                            @php $total = 0; @endphp
-                            @foreach ($puzzles as $puzzle)
-                                @php
-                                    $sousTotal = $puzzle->prix * $puzzle->pivot->quantite;
-                                    $total += $sousTotal;
-                                @endphp
-                                <tr class="whitespace-nowrap">
-                                    <td class="px-4 py-4 text-sm text-gray-500">{{ $puzzle->id }}</td>
-                                    <td class="px-4 py-4">{{ $puzzle->nom }}</td> {{-- ou total si tu as un champ total par puzzle --}}
-                                    <td class="px-4 py-4">{{ $puzzle->prix }} €</td> {{-- ou total si tu as un champ total par puzzle --}}
-                                    <td class="px-4 py-4">
-                                        <form action="{{ route('paniers.update', $puzzle->id) }}" method="POST" class="inline">
-                                            @csrf
-                                            @method('PUT')
-                                            <button type="submit" name="action" value="decrease" class="px-2">-</button>
-                                        </form>
-
-                                        {{ $puzzle->pivot->quantite }}
-
-                                        <form action="{{ route('paniers.update', $puzzle->id) }}" method="POST" class="inline">
-                                            @csrf
-                                            @method('PUT')
-                                            <button type="submit" name="action" value="increase" class="px-2">+</button>
-                                        </form>
-
-                                    </td>
-                                    <td class="px-4 py-4">{{ $sousTotal }} €</td>
-                                    </td>
-                                    <td>
-                                        <form action="{{ route('paniers.destroy', $puzzle->id) }}" method="POST" class="inline">
-                                            @csrf
-                                            @method('DELETE')
-                                            <button type="submit" class="bg-red-600 text-white px-4 py-2 rounded hover:bg-red-700">
-                                                @lang('X')
-                                            </button>
-                                        </form>
-                                    </td>
+                    {{-- Table responsive avec le style d'accueil --}}
+                    <div class="overflow-x-auto">
+                        <table class="min-w-full text-left">
+                            <thead>
+                                <tr class="text-[#1e3b57] text-sm uppercase tracking-wide">
+                                    <th class="px-4 py-3">Produit</th>
+                                    <th class="px-4 py-3">Prix</th>
+                                    <th class="px-4 py-3">Quantité</th>
+                                    <th class="px-4 py-3">Total</th>
+                                    <th class="px-4 py-3">Action</th>
                                 </tr>
-                            @endforeach
-                        </tbody>
-                        <tfoot class="bg-gray-100">
-                            <tr>
-                                <td colspan="4" class="px-4 py-4 text-right font-bold">Total :</td>
-                                <td colspan="2" class="px-4 py-4 font-bold">{{ $total }} €</td>
-                            </tr>
-                            <tr>
-                                
-                                <td colspan="6" class="px-4 py-4 text-right">
-                                    @if ($adresse)
-                                        <a href="{{ route('paniers.paiement') }}" 
-                                            class="bg-blue-600 text-white px-6 py-2 rounded hover:bg-blue-700 transition">
-                                            Commander
-                                        </a>
-                                    @else
-                                        <p class="text-red-600 font-semibold">
-                                            ⚠️ Vous devez ajouter une adresse avant de pouvoir passer commande.
-                                        </p>
-                                    @endif
-                                </td>
-                            </tr>
-                        </tfoot>
+                            </thead>
+                            <tbody class="divide-y divide-white/60">
+                                @php $grandTotal = 0; @endphp
+                                @foreach($panier as $id => $item)
+                                    @php $grandTotal += $item['total']; @endphp
+                                    <tr class="whitespace-nowrap">
+                                        <td class="px-4 py-4 text-[#1f3b57] font-medium">{{ $item['nom'] }}</td>
+                                        <td class="px-4 py-4 text-[#1f3b57]">{{ $item['prix'] }} €</td>
+                                        <td class="px-4 py-4">
+                                            <form action="{{ route('panier.update', $id) }}" method="POST" class="flex items-center gap-3">
+                                                @csrf
+                                                <input type="number" name="quantite" value="{{ $item['quantite'] }}" min="1"
+                                                       class="w-24 px-3 py-2 rounded-2xl border border-white/50 bg-white/80 text-center text-[#1e3b57] outline-none focus:ring-2 focus:ring-[#3aa3e3]/50">
+                                                <button type="submit"
+                                                        class="inline-flex items-center gap-2 px-4 py-2 rounded-2xl bg-[#1e3b57] text-white font-semibold hover:opacity-90 transition active:scale-95">
+                                                    Appliquer
+                                                </button>
+                                            </form>
+                                        </td>
+                                        <td class="px-4 py-4 text-[#1f3b57] font-semibold">{{ $item['total'] }} €</td>
+                                        <td class="px-4 py-4">
+                                            <form action="{{ route('panier.remove', $id) }}" method="POST">
+                                                @csrf
+                                                <button class="inline-flex items-center gap-2 px-3 py-2 rounded-2xl bg-red-500 text-white hover:bg-red-600 transition active:scale-95">
+                                                    Supprimer
+                                                </button>
+                                            </form>
+                                        </td>
+                                    </tr>
+                                @endforeach
+                            </tbody>
+                            <tfoot>
+                                <tr class="bg-white/60">
+                                    <td colspan="3" class="px-4 py-3 text-right font-bold text-[#1e3b57]">Total général :</td>
+                                    <td colspan="2" class="px-4 py-3 font-extrabold text-[#1e3b57]">{{ $grandTotal }} €</td>
+                                </tr>
+                            </tfoot>
+                        </table>
+                    </div>
 
-                    </table>
+                    {{-- Actions --}}
+                    <div class="mt-8 flex flex-wrap items-center gap-3">
+                        <a href="{{ route('puzzles.index') }}"
+                           class="inline-flex items-center gap-2 px-6 py-3 rounded-2xl font-semibold bg-white/80 text-[#1e3b57] border border-white/50 shadow hover:bg-white transition active:scale-95">
+                            Continuer les achats
+                        </a>
 
-                </div>
-            </div>
+                        @auth
+                            <a href="{{ route('checkout.show') }}"
+                               class="inline-flex items-center gap-2 px-6 py-3 rounded-2xl font-semibold bg-[#3aa3e3] text-white hover:opacity-90 transition active:scale-95">
+                                Payer
+                            </a>
+                        @else
+                            <a href="{{ route('login') }}"
+                               class="inline-flex items-center gap-2 px-6 py-3 rounded-2xl font-semibold bg-[#1e3b57] text-white hover:opacity-90 transition active:scale-95">
+                                Se connecter pour payer
+                            </a>
+                        @endauth
+                    </div>
+                @endif
+            </section>
+
         </div>
     </div>
 </x-app-layout>

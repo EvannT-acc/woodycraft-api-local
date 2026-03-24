@@ -9,9 +9,18 @@ class Categorie extends Model
 {
     use HasFactory;
 
+    protected $table = 'categories';
+
+    protected $fillable = [
+        'nom',
+        'description',
+        'image',
+        'created_at',
+        'updated_at',
+    ];
+
     public function puzzles()
     {
-        return $this->hasMany(Puzzle::class);
+        return $this->hasMany(Puzzle::class, 'categorie_id');
     }
-
 }

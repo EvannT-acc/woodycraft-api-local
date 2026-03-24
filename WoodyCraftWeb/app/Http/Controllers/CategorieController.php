@@ -2,76 +2,108 @@
 
 namespace App\Http\Controllers;
 
-use Illuminate\Http\Request;
-use App\Models\Puzzle;
 use App\Models\Categorie;
-
+use Illuminate\Http\Request;
+use Illuminate\Database\Eloquent\Builder;
 
 class CategorieController extends Controller
 {
-    /**
-     * Display a listing of the resource.
-     */
 
-
-    public function index()
+    public function home()
     {
-        $categories = Categorie::all();
+        $categories = Categorie::withCount('puzzles')
+            ->orderByRaw('LOWER(nom) asc')
+            ->get();
+
+        return view('welcome', compact('categories'));
+    }
+
+    /**
+     * Liste des catégories avec recherche + tri
+     */
+    public function index(Request $request)
+    {
+        $q    = trim((string) $request->get('q'));
+        $sort = $request->get('sort');
+
+        // on suppose que le modèle Categorie a une relation puzzles()
+        $query = Categorie::query()->withCount('puzzles');
+
+        // recherche plein texte simple (adapte si ta table n'a pas 'description')
+        if ($q !== '') {
+            $query->where(function (Builder $b) use ($q) {
+                $b->where('nom', 'like', "%{$q}%")
+                  ->orWhere('description', 'like', "%{$q}%");
+            });
+        }
+
+        // TRI (uniquement sur les colonnes existantes: nom, puzzles_count)
+        switch ($sort) {
+            case 'name_asc':
+                $query->orderByRaw('LOWER(nom) asc');
+                break;
+            case 'name_desc':
+                $query->orderByRaw('LOWER(nom) desc');
+                break;
+            case 'count_desc':
+                $query->orderBy('puzzles_count', 'desc');
+                break;
+            case 'count_asc':
+                $query->orderBy('puzzles_count', 'asc');
+                break;
+            default:
+                // tri par défaut
+                $query->orderByRaw('LOWER(nom) asc');
+                break;
+        }
+
+        $categories = $query->paginate(12)->withQueryString();
+
         return view('categories.index', compact('categories'));
     }
-    
 
     /**
-     * Show the form for creating a new resource.
+     * Détail d’une catégorie + liste de ses puzzles avec recherche + tri
      */
-    public function create()
+    public function show(Categorie $category, Request $request)
     {
-        //
+        $q    = trim((string) $request->get('q'));
+        $sort = $request->get('sort');
+
+        $puzzlesQuery = $category->puzzles(); // relation hasMany sur Puzzle
+
+        // recherche sur nom/description
+        if ($q !== '') {
+            $puzzlesQuery->where(function (Builder $b) use ($q) {
+                $b->where('nom', 'like', "%{$q}%")
+                  ->orWhere('description', 'like', "%{$q}%");
+            });
+        }
+
+        // TRI (colonnes FR: nom, prix, created_at)
+        switch ($sort) {
+            case 'price_asc':
+                $puzzlesQuery->orderBy('prix', 'asc');
+                break;
+            case 'price_desc':
+                $puzzlesQuery->orderBy('prix', 'desc');
+                break;
+            case 'name_asc':
+                $puzzlesQuery->orderByRaw('LOWER(nom) asc');
+                break;
+            case 'name_desc':
+                $puzzlesQuery->orderByRaw('LOWER(nom) desc');
+                break;
+            case 'newest':
+                $puzzlesQuery->orderBy('created_at', 'desc');
+                break;
+            default:
+                $puzzlesQuery->orderByRaw('LOWER(nom) asc');
+                break;
+        }
+
+        $puzzles = $puzzlesQuery->paginate(9)->withQueryString();
+
+        return view('categories.show', compact('category', 'puzzles'));
     }
-
-    /**
-     * Store a newly created resource in storage.
-     */
-    public function store(Request $request)
-    {
-        //
-    }
-
-    /**
-     * Display the specified resource.
-     */
-    public function show( $id)
-    {
-        $categorie = Categorie::with('puzzles')->findOrFail($id);
-        return view('categories.categorie', compact('categorie'));
-    }
-
-    /**
-     * Show the form for editing the specified resource.
-     */
-    public function edit(string $id)
-    {
-        //
-    }
-
-    /**
-     * Update the specified resource in storage.
-     */
-    public function update(Request $request, string $id)
-    {
-        //
-    }
-
-    /**
-     * Remove the specified resource from storage.
-     */
-    public function destroy(string $id)
-    {
-        //
-    }
-
-    
-    
-
-    
 }

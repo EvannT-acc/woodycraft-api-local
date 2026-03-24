@@ -11,10 +11,19 @@ class User extends Authenticatable
 {
     use HasApiTokens, HasFactory, Notifiable;
 
+    protected $table = 'users';
+
     protected $fillable = [
         'nom',
+        'prenom',
+        'role',
+        'telephone',
         'email',
         'password',
+        'email_verified_at',
+        'remember_token',
+        'created_at',
+        'updated_at',
     ];
 
     protected $hidden = [
@@ -25,17 +34,27 @@ class User extends Authenticatable
     protected $casts = [
         'email_verified_at' => 'datetime',
         'password' => 'hashed',
+        'created_at' => 'datetime',
+        'updated_at' => 'datetime',
     ];
 
-    // hasMany car un user peut avoir plusieurs adresses
     public function adresses()
     {
-        return $this->hasMany(Adresse::class);
+        return $this->hasMany(Adresse::class, 'user_id');
     }
 
-    // Relation vers les paniers du user
     public function paniers()
     {
-        return $this->hasMany(Panier::class);
+        return $this->hasMany(Panier::class, 'user_id');
+    }
+
+    public function avis()
+    {
+        return $this->hasMany(Avis::class, 'user_id');
+    }
+
+    public function isAdmin(): bool
+    {
+        return $this->role === 'admin';
     }
 }

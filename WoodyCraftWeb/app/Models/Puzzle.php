@@ -9,6 +9,8 @@ class Puzzle extends Model
 {
     use HasFactory;
 
+    protected $table = 'puzzles';
+
     protected $fillable = [
         'nom',
         'categorie_id',
@@ -16,18 +18,28 @@ class Puzzle extends Model
         'image',
         'prix',
         'stock',
+        'seuil_alerte',
+        'created_at',
+        'updated_at',
     ];
 
-    // Relation avec la catégorie
     public function categorie()
     {
         return $this->belongsTo(Categorie::class, 'categorie_id');
     }
 
-    // Relation avec Panier via la table pivot "appartient"
     public function paniers()
     {
-        return $this->belongsToMany(Panier::class, 'appartient')
-                    ->withPivot('quantite');
+        return $this->belongsToMany(
+            Panier::class,
+            'appartient',
+            'puzzle_id',
+            'panier_id'
+        )->withPivot('quantite');
+    }
+
+    public function avis()
+    {
+        return $this->hasMany(Avis::class, 'puzzle_id');
     }
 }

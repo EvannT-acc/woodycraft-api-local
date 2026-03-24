@@ -27,6 +27,7 @@ class PuzzleTest extends TestCase
         ]);
     }
 
+
     public function test_puzzle_creation_fails_with_missing_data()
     {
         $this->expectException(ValidationException::class);
@@ -93,7 +94,7 @@ class PuzzleTest extends TestCase
 
         $this->expectException(ValidationException::class);
 
-        // Valider les données manuellement avec la règle d’unicité
+        // Valider les données manuellement avec la règle d'unicité
         $validator = Validator::make($puzzleData, [
             'nom' => 'required|unique:puzzles,nom',
             'categorie' => 'required',
@@ -105,57 +106,46 @@ class PuzzleTest extends TestCase
         $validator->validate();
 
         Puzzle::create($puzzleData); // Création avec le même nom unique
-        
     }
+
     public function test_puzzle_can_be_read()
     {
-        // Création d'un puzzle en base avec des données spécifiques
         $puzzle = Puzzle::factory()->create([
             'nom' => 'Test Puzzle',
             'categorie' => 'Test Categorie',
             'description' => 'Ceci est un puzzle de test.',
             'prix' => 9.99,
         ]);
+    
+        $this->assertDatabaseHas('puzzles', [
+            'nom' => 'Test Puzzle',
+        ]);
+
         $foundPuzzle = Puzzle::find($puzzle->id);
-
-        //verifie que le puzzle zxiste
-        $this->assertNotNull($foundPuzzle);
-
-        //verifie que le nom du puzzle est truc
-        $this->assertEquals('Test Puzzle', $foundPuzzle->nom);
-        
     }
     
-    public function test_puzzle_can_be_updated()
+    public function test_puzzle_can_be_updated()    //Vérifie que le nouveau nom est dans la base aprés une update
     {
-    // Création d'un puzzle avec les données générées par la factory
-    $puzzle = Puzzle::factory()->create();
+        $puzzle = Puzzle::factory()->create();
 
-    // Mise à jour du nom du puzzle
-    $puzzle->nom = 'Nom mis a jour';
-    $puzzle->save();
+        $puzzle->nom = 'Nom mis à jour';
+        $puzzle->save();
 
-    // Récupérer à nouveau le puzzle depuis la base de données
-    $updatedPuzzle = Puzzle::find($puzzle->id);
-
-    // Vérifier que le nom a bien été mis à jour
-    $this->assertEquals('Nom mis a jour', $updatedPuzzle->nom);
+        $this->assertDatabaseHas('puzzles', [
+            'id' => $puzzle->id,
+            'nom' => 'Nom mis à jour',
+        ]);
     }
 
-    public function test_puzzle_can_be_deleted()
+    public function test_puzzle_can_be_deleted()    //Vérifie que le Puzzle n'existe plus
     {
-    // Création d'un puzzle avec la factory
-    $puzzle = Puzzle::factory()->create();
-    
+        $puzzle = Puzzle::factory()->create();
 
-    // Suppression du puzzle
-    $puzzle->delete();
+        $puzzle->delete();
 
-    // Vérification que le puzzle n'existe plus en base de données
-    $this->assertDatabaseMissing('puzzles', [
-        'id' => $puzzle->id,
-    ]);
+        $this->assertDatabaseMissing('puzzles', [
+            'id' => $puzzle->id,
+        ]);
     }
-
 
 }

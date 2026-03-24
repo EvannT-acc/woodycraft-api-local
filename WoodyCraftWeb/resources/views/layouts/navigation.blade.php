@@ -5,95 +5,87 @@
             <div class="flex">
                 <!-- Logo -->
                 <div class="shrink-0 flex items-center">
-                    <a href="{{ route('categories.index') }}">
+                    <a href="{{ route('home') }}">
                         <x-application-logo class="block h-9 w-auto fill-current text-gray-800 dark:text-gray-200" />
                     </a>
                 </div>
 
                 <!-- Navigation Links -->
                 <div class="hidden space-x-8 sm:-my-px sm:ms-10 sm:flex">
-                    <x-nav-link :href="route('categories.index')" :active="request()->routeIs('categories.index')">
-                        {{ __('Dashboard') }}
+                    <x-nav-link :href="route('home')" :active="request()->routeIs('home')">
+                        {{ __('home') }}
                     </x-nav-link>
-                    <x-nav-link :href="route('puzzles.create')" :active="request()->routeIs('puzzles.create')">
-                        {{ __('Créer un Puzzle') }}
-                    </x-nav-link>
+                </div>
+                <div class="hidden space-x-8 sm:-my-px sm:ms-10 sm:flex">
                     <x-nav-link :href="route('puzzles.index')" :active="request()->routeIs('puzzles.index')">
                         {{ __('Liste des puzzles') }}
                     </x-nav-link>
                 </div>
+                <div class="hidden space-x-8 sm:-my-px sm:ms-10 sm:flex">
+                    <x-nav-link :href="route('categories.index')" :active="request()->routeIs('categories.index')">
+                        {{ __('Liste des categories') }}
+                    </x-nav-link>
+                </div>
+                <div class="hidden space-x-8 sm:-my-px sm:ms-10 sm:flex">
+                    <x-nav-link :href="route('paniers.index')" :active="request()->routeIs('categories.index')">
+                        {{ __('panier') }}
+                    </x-nav-link>
+                </div>
             </div>
 
-            <!-- Right side -->
+            <!-- Settings Dropdown -->
             <div class="hidden sm:flex sm:items-center sm:ms-6">
                 @auth
-                    <!-- Dropdown utilisateur -->
                     <x-dropdown align="right" width="48">
                         <x-slot name="trigger">
-                            <button
-                                class="inline-flex items-center px-3 py-2 border border-transparent text-sm leading-4 font-medium 
-                                       rounded-md text-gray-500 dark:text-gray-400 bg-white dark:bg-gray-800 
-                                       hover:text-gray-700 dark:hover:text-gray-300 focus:outline-none transition ease-in-out duration-150">
-                                <div>{{ Auth::user()->name }}</div>
+                            <button class="inline-flex items-center px-3 py-2 border border-transparent text-sm leading-4 font-medium rounded-md text-gray-500 dark:text-gray-400 bg-white dark:bg-gray-800 hover:text-gray-700 dark:hover:text-gray-300 focus:outline-none transition ease-in-out duration-150">
+                                <div>{{ Auth::user()->nom }}</div>
+
                                 <div class="ms-1">
                                     <svg class="fill-current h-4 w-4" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 20 20">
-                                        <path fill-rule="evenodd"
-                                              d="M5.293 7.293a1 1 0 011.414 0L10 10.586l3.293-3.293a1 1 0 111.414 1.414l-4 4a1 1 0 01-1.414 0l-4-4a1 1 0 010-1.414z"
-                                              clip-rule="evenodd" />
+                                        <path fill-rule="evenodd" d="M5.293 7.293a1 1 0 011.414 0L10 10.586l3.293-3.293a1 1 0 111.414 1.414l-4 4a1 1 0 01-1.414 0l-4-4a1 1 0 010-1.414z" clip-rule="evenodd" />
                                     </svg>
                                 </div>
-                                <x-dropdown-link :href="route('paniers.index')">
-                                        {{ __('Mon panier') }}
-                                    </x-dropdown-link>
                             </button>
                         </x-slot>
 
                         <x-slot name="content">
-                            <x-dropdown-link :href="route('paniers.index')">
-                                {{ __('Mon panier') }}
-                            </x-dropdown-link>
-
                             <x-dropdown-link :href="route('profile.edit')">
-                                {{ __('Profil') }}
+                                {{ __('Profile') }}
                             </x-dropdown-link>
 
-                            <!-- Déconnexion -->
+                            <!-- Authentication -->
                             <form method="POST" action="{{ route('logout') }}">
                                 @csrf
+
                                 <x-dropdown-link :href="route('logout')"
-                                    onclick="event.preventDefault(); this.closest('form').submit();">
-                                    {{ __('Se déconnecter') }}
+                                        onclick="event.preventDefault();
+                                                    this.closest('form').submit();">
+                                    {{ __('Log Out') }}
                                 </x-dropdown-link>
                             </form>
                         </x-slot>
                     </x-dropdown>
                 @else
-                    <!-- Boutons Se connecter / S'inscrire -->
-                    <div class="flex space-x-3">
-                        <x-link-button href="{{ route('login') }}">
+                    <div class="flex items-center gap-4">
+                        <a href="{{ route('login') }}" class="text-sm font-semibold text-gray-600 hover:text-gray-800 dark:text-gray-300 dark:hover:text-gray-100">
                             {{ __('Se connecter') }}
-                        </x-link-button>
-
-                        <x-link-button href="{{ route('register') }}">
-                            {{ __('S’inscrire') }}
-                        </x-link-button>
+                        </a>
+                        @if (Route::has('register'))
+                            <a href="{{ route('register') }}" class="text-sm font-semibold text-gray-600 hover:text-gray-800 dark:text-gray-300 dark:hover:text-gray-100">
+                                {{ __('S\'inscrire') }}
+                            </a>
+                        @endif
                     </div>
                 @endauth
             </div>
 
-            <!-- Hamburger (mobile) -->
+            <!-- Hamburger -->
             <div class="-me-2 flex items-center sm:hidden">
-                <button @click="open = ! open"
-                        class="inline-flex items-center justify-center p-2 rounded-md text-gray-400 dark:text-gray-500 
-                               hover:text-gray-500 dark:hover:text-gray-400 hover:bg-gray-100 dark:hover:bg-gray-900 
-                               focus:outline-none transition duration-150 ease-in-out">
+                <button @click="open = ! open" class="inline-flex items-center justify-center p-2 rounded-md text-gray-400 dark:text-gray-500 hover:text-gray-500 dark:hover:text-gray-400 hover:bg-gray-100 dark:hover:bg-gray-900 focus:outline-none focus:bg-gray-100 dark:focus:bg-gray-900 focus:text-gray-500 dark:focus:text-gray-400 transition duration-150 ease-in-out">
                     <svg class="h-6 w-6" stroke="currentColor" fill="none" viewBox="0 0 24 24">
-                        <path :class="{'hidden': open, 'inline-flex': ! open }" class="inline-flex"
-                              stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
-                              d="M4 6h16M4 12h16M4 18h16" />
-                        <path :class="{'hidden': ! open, 'inline-flex': open }" class="hidden"
-                              stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
-                              d="M6 18L18 6M6 6l12 12" />
+                        <path :class="{'hidden': open, 'inline-flex': ! open }" class="inline-flex" stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 6h16M4 12h16M4 18h16" />
+                        <path :class="{'hidden': ! open, 'inline-flex': open }" class="hidden" stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12" />
                     </svg>
                 </button>
             </div>
@@ -103,14 +95,14 @@
     <!-- Responsive Navigation Menu -->
     <div :class="{'block': open, 'hidden': ! open}" class="hidden sm:hidden">
         <div class="pt-2 pb-3 space-y-1">
-            <x-responsive-nav-link :href="route('categories.index')" :active="request()->routeIs('categories.index')">
-                {{ __('Dashboard') }}
+            <x-responsive-nav-link :href="route('home')" :active="request()->routeIs('home')">
+                {{ __('home') }}
             </x-responsive-nav-link>
         </div>
 
-        <!-- Menu mobile -->
-        @auth
-            <div class="pt-4 pb-1 border-t border-gray-200 dark:border-gray-600">
+        <!-- Responsive Settings Options -->
+        <div class="pt-4 pb-1 border-t border-gray-200 dark:border-gray-600">
+            @auth
                 <div class="px-4">
                     <div class="font-medium text-base text-gray-800 dark:text-gray-200">{{ Auth::user()->name }}</div>
                     <div class="font-medium text-sm text-gray-500">{{ Auth::user()->email }}</div>
@@ -118,33 +110,41 @@
 
                 <div class="mt-3 space-y-1">
                     <x-responsive-nav-link :href="route('profile.edit')">
-                        {{ __('Profil') }}
-                    </x-responsive-nav-link>
-                    <x-responsive-nav-link :href="route('paniers.index')">
-                        {{ __('Mon panier') }}
+                        {{ __('Profile') }}
                     </x-responsive-nav-link>
 
-                    <!-- Déconnexion -->
+                    <!-- Authentication -->
                     <form method="POST" action="{{ route('logout') }}">
                         @csrf
+
                         <x-responsive-nav-link :href="route('logout')"
-                            onclick="event.preventDefault(); this.closest('form').submit();">
-                            {{ __('Se déconnecter') }}
+                                onclick="event.preventDefault();
+                                            this.closest('form').submit();">
+                            {{ __('Log Out') }}
                         </x-responsive-nav-link>
                     </form>
                 </div>
-            </div>
-        @else
-            <div class="pt-4 pb-3 border-t border-gray-200 dark:border-gray-600">
-                <div class="flex flex-col space-y-2 px-4">
-                    <x-link-button href="{{ route('login') }}">
-                        {{ __('Se connecter') }}
-                    </x-link-button>
-                    <x-link-button href="{{ route('register') }}">
-                        {{ __('S’inscrire') }}
-                    </x-link-button>
+            @else
+                <div class="px-4">
+                    <div class="font-medium text-base text-gray-800 dark:text-gray-200">
+                        {{ __('Bienvenue !') }}
+                    </div>
+                    <div class="font-medium text-sm text-gray-500">
+                        {{ __('Connecte-toi pour accéder à ton espace.') }}
+                    </div>
                 </div>
-            </div>
-        @endauth
+
+                <div class="mt-3 space-y-1">
+                    <x-responsive-nav-link :href="route('login')" :active="request()->routeIs('login')">
+                        {{ __('Se connecter') }}
+                    </x-responsive-nav-link>
+                    @if (Route::has('register'))
+                        <x-responsive-nav-link :href="route('register')" :active="request()->routeIs('register')">
+                            {{ __('S\'inscrire') }}
+                        </x-responsive-nav-link>
+                    @endif
+                </div>
+            @endauth
+        </div>
     </div>
 </nav>
