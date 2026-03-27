@@ -16,8 +16,8 @@ class PanierController extends Controller
      */
     public function index()
     {
-        $paniers = Panier::select('id', 'statut')
-                         ->where('statut', 'en cours')
+        $paniers = Panier::select('id', 'statut', 'total')
+                         ->whereIn('statut', ['en cours', 'validé'])
                          ->get();
 
         return response()->json([
