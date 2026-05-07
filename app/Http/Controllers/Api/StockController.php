@@ -1,60 +1,41 @@
-<?php
-
-namespace App\Http\Controllers\Api;
-
-use App\Http\Controllers\Controller;
+use App\Models\Approvisionnement;
 use App\Models\Puzzle;
-use Illuminate\Http\Request;
+use Illuminate\Support\Facades\DB; // Très important pour la sécurité des données
 
-class StockController extends Controller
+public function update(Request $request, $id)
 {
-    /**
-     * GET /api/stocks
-     * Affiche l'état des stocks pour tous les puzzles.
-     */
-    public function index()
-    {
-        $stocks = Puzzle::select('id', 'nom', 'stock')->get();
+    $request->validate([
+        'quantite' => 'required|integer|min:0',
+        'fournisseur' => 'nullable|string'
+    ]);
 
-        $data = $stocks->map(function ($p) {
-            return [
-                'id'       => $p->id,
-                'nom'      => $p->nom,
-                'quantite' => $p->stock,
-                'alerte'   => $p->stock <= 5,
-                'statut'   => $this->definirStatut($p->stock),
-            ];
-        });
-
-        return response()->json($data);
-    }
-
-    /**
-     * PATCH /api/stocks/{id}
-     * Met à jour la quantité en stock d'un puzzle spécifique.
-     */
-    public function update(Request $request, $id)
-    {
-        $request->validate([
-            'quantite' => 'required|integer|min:0'
-        ]);
-
+    // On utilise une transaction : si un truc plante, rien n'est enregistré
+    return DB::transaction(function () use ($request, $id) {
+        
         $puzzle = Puzzle::findOrFail($id);
-        $puzzle->stock = $request->quantite;
+        $ancienStock = $puzzle->stock;
+        $nouveauStock = $request->quantite;
+        $difference = $nouveauStock - $ancienStock;
+
+        // 1. Mise à jour du stock du Puzzle
+        $puzzle->stock = $nouveauStock;
         $puzzle->save();
+
+        // 2. Traçabilité : on crée l'approvisionnement seulement si on a ajouté du stock
+        if ($difference > 0) {
+            Approvisionnement::create([
+                'puzzle_id'   => $puzzle->id,
+                'quantite'    => $difference,
+                'fournisseur' => $request->fournisseur ?? 'Manuel',
+                'date_reception' => now(), // Optionnel : ajoute la date actuelle
+            ]);
+        }
 
         return response()->json([
             'success'       => true,
-            'message'       => "Stock mis à jour pour {$puzzle->nom}",
+            'message'       => "Stock mis à jour (" . ($difference > 0 ? "Approvisionnement tracé" : "Correction manuelle") . ")",
             'nouveau_stock' => $puzzle->stock,
-            'statut'        => $this->definirStatut($puzzle->stock)
+            'difference'    => $difference
         ]);
-    }
-
-    private function definirStatut($q)
-    {
-        if ($q <= 0) return 'RUPTURE_DE_STOCK';
-        if ($q <= 5) return 'STOCK_BAS';
-        return 'OK';
-    }
+    });
 }

@@ -10,84 +10,83 @@ use Illuminate\Support\Facades\DB;
 
 class DashboardController extends Controller
 {
-    // -------------------------------------------------------
-    // GET /api/dashboard/resume
-    // Chiffres clés tout en haut du tableau de bord Flutter
-    // -------------------------------------------------------
+    /**
+     * GET /api/dashboard/resume
+     */
     public function resume()
     {
-        $commandesEnAttente = Panier::where('statut', 'preparation')->count();
-    
-        $stockBasCount = Puzzle::whereColumn('stock', '<=', 'seuil_alerte')->count();
-    
-        $chiffreAffaireMois = Panier::where('statut', 'preparation')
+        // Statut "en cours" = commandes en attente de validation (cohérent avec Flutter)
+        $commandesEnAttente = Panier::where('statut', 'en cours')->count();
+
+        // Puzzles avec stock bas (colonne seuil_alerte, fallback à 5)
+        $stockBasCount = Puzzle::whereRaw(
+            'stock <= COALESCE(seuil_alerte, 5)'
+        )->count();
+
+        // CA du mois sur commandes validées ou expédiées
+        $chiffreAffaireMois = Panier::whereIn('statut', ['validé', 'expédié'])
             ->whereMonth('created_at', now()->month)
             ->whereYear('created_at', now()->year)
             ->sum('total');
-    
-        $totalClients = User::whereNull('role')
-            ->orWhere('role', '!=', 'admin')
-            ->count();
-    
+
+        $totalClients = User::where(function ($q) {
+            $q->whereNull('role')->orWhere('role', '!=', 'admin');
+        })->count();
+
         return response()->json([
-            'commandes_en_attente'  => $commandesEnAttente,
-            'puzzles_stock_bas'     => $stockBasCount,
-            'chiffre_affaire_mois'  => round($chiffreAffaireMois, 2),
-            'nombre_clients'        => $totalClients,
+            'commandes_en_attente' => $commandesEnAttente,
+            'puzzles_stock_bas'    => $stockBasCount,
+            'chiffre_affaire_mois' => round((float) $chiffreAffaireMois, 2),
+            'total_clients'        => $totalClients,  // ← clé attendue par Flutter
         ]);
     }
 
-    // -------------------------------------------------------
-    // GET /api/dashboard/commandes-attente
-    // Liste des commandes en attente avec détail client
-    // -------------------------------------------------------
+    /**
+     * GET /api/dashboard/commandes-attente
+     */
     public function commandesEnAttente()
     {
         $commandes = Panier::with(['user', 'puzzles'])
-            ->where('statut', 'preparation')
+            ->where('statut', 'en cours')
             ->orderBy('created_at', 'desc')
             ->get()
-            ->map(function ($panier) {
-                return [
-                    'id'            => $panier->id,
-                    'statut'        => $panier->statut,
-                    'total'         => $panier->total,
-                    'mode_paiement' => $panier->mode_paiement,
-                    'date_commande' => $panier->created_at,
-                    'client' => $panier->user ? [
-                        'id'     => $panier->user->id,
-                        'nom'    => $panier->user->nom,
-                        'prenom' => $panier->user->prenom,
-                        'email'  => $panier->user->email,
-                    ] : null,
-                    'articles' => $panier->puzzles->map(fn($p) => [
-                        'puzzle_id' => $p->id,
-                        'nom'       => $p->nom,
-                        'quantite'  => $p->pivot->quantite,
-                        'prix'      => $p->prix,
-                        'sous_total'=> round($p->prix * $p->pivot->quantite, 2),
-                    ]),
-                ];
-            });
+            ->map(fn($panier) => [
+                'id'            => $panier->id,
+                'statut'        => $panier->statut,
+                'total'         => (float) $panier->total,
+                'mode_paiement' => $panier->mode_paiement,
+                'date_commande' => $panier->created_at,
+                'client' => $panier->user ? [
+                    'id'    => $panier->user->id,
+                    'nom'   => $panier->user->name ?? $panier->user->nom,
+                    'email' => $panier->user->email,
+                ] : null,
+                'articles' => $panier->puzzles->map(fn($p) => [
+                    'puzzle_id' => $p->id,
+                    'nom'       => $p->nom,
+                    'quantite'  => $p->pivot->quantite,
+                    'prix'      => $p->prix,
+                    'sous_total'=> round($p->prix * $p->pivot->quantite, 2),
+                ]),
+            ]);
 
         return response()->json($commandes);
     }
 
-    // -------------------------------------------------------
-    // GET /api/dashboard/stock-bas
-    // Puzzles dont le stock est <= seuil_alerte
-    // -------------------------------------------------------
+    /**
+     * GET /api/dashboard/stock-bas
+     */
     public function stockBas()
     {
         $puzzles = Puzzle::with('categorie')
-            ->whereColumn('stock', '<=', 'seuil_alerte')
+            ->whereRaw('stock <= COALESCE(seuil_alerte, 5)')
             ->orderBy('stock', 'asc')
             ->get()
             ->map(fn($p) => [
                 'id'           => $p->id,
                 'nom'          => $p->nom,
                 'stock'        => $p->stock,
-                'seuil_alerte' => $p->seuil_alerte,
+                'seuil_alerte' => $p->seuil_alerte ?? 5,
                 'prix'         => $p->prix,
                 'image'        => $p->image,
                 'categorie'    => $p->categorie->nom ?? null,
@@ -96,13 +95,12 @@ class DashboardController extends Controller
         return response()->json($puzzles);
     }
 
-    // -------------------------------------------------------
-    // GET /api/dashboard/stats-ventes
-    // CA par jour (30 derniers jours) + CA par mois (12 mois)
-    // -------------------------------------------------------
+    /**
+     * GET /api/dashboard/stats-ventes
+     */
     public function statsVentes()
     {
-        $caParJour = Panier::where('statut', 'preparation')
+        $caParJour = Panier::whereIn('statut', ['validé', 'expédié'])
             ->where('created_at', '>=', now()->subDays(30))
             ->select(
                 DB::raw('DATE(created_at) as date'),
@@ -113,7 +111,7 @@ class DashboardController extends Controller
             ->orderBy('date', 'asc')
             ->get();
 
-        $caParMois = Panier::where('statut', 'preparation')
+        $caParMois = Panier::whereIn('statut', ['validé', 'expédié'])
             ->where('created_at', '>=', now()->subMonths(12))
             ->select(
                 DB::raw('YEAR(created_at) as annee'),
@@ -132,18 +130,15 @@ class DashboardController extends Controller
         ]);
     }
 
-    // -------------------------------------------------------
-    // GET /api/dashboard/top-puzzles
-    // Top 5 puzzles les plus commandés (par quantité)
-    // Note: utilise puzzles.prix car prix_unitaire pas encore
-    //       dans la table appartient
-    // -------------------------------------------------------
+    /**
+     * GET /api/dashboard/top-puzzles
+     */
     public function topPuzzles()
     {
         $topPuzzles = DB::table('appartient')
             ->join('puzzles', 'puzzles.id', '=', 'appartient.puzzle_id')
             ->join('paniers', 'paniers.id', '=', 'appartient.panier_id')
-            ->where('paniers.statut', 'preparation')
+            ->whereIn('paniers.statut', ['validé', 'expédié'])
             ->select(
                 'puzzles.id',
                 'puzzles.nom',
@@ -153,13 +148,7 @@ class DashboardController extends Controller
                 DB::raw('SUM(appartient.quantite) as total_vendu'),
                 DB::raw('SUM(appartient.quantite * puzzles.prix) as revenu_total')
             )
-            ->groupBy(
-                'puzzles.id',
-                'puzzles.nom',
-                'puzzles.prix',
-                'puzzles.image',
-                'puzzles.stock'
-            )
+            ->groupBy('puzzles.id', 'puzzles.nom', 'puzzles.prix', 'puzzles.image', 'puzzles.stock')
             ->orderBy('total_vendu', 'desc')
             ->limit(5)
             ->get();

@@ -1,33 +1,38 @@
 <?php
 
+// Le modèle Puzzle représente la table "puzzles".
+// On lui ajoute la relation vers les approvisionnements.
+
 namespace App\Models;
 
-use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
 
 class Puzzle extends Model
 {
-    use HasFactory;
-
     protected $fillable = [
         'nom',
-        'categorie_id',
         'description',
         'image',
         'prix',
+        'categorie_id',
         'stock',
     ];
 
-    // Relation avec la catégorie
-    public function categorie()
+    /**
+     * Relation : un puzzle POSSÈDE PLUSIEURS approvisionnements.
+     * Cela permet d'écrire $puzzle -_--> approvisionnements pour voir tout son historique.
+     */
+    public function approvisionnements()
     {
-        return $this->belongsTo(Categorie::class, 'categorie_id');
+        return $this->hasMany(Approvisionnement::class);
     }
 
-    // Relation avec Panier via la table pivot "appartient"
-    public function paniers()
+    /**
+     * Relation vers la catégorie (déjà existante dans ton projet,
+     * on la garde pour ne rien casser)
+     */
+    public function categorie()
     {
-        return $this->belongsToMany(Panier::class, 'appartient')
-                    ->withPivot('quantite');
+        return $this->belongsTo(Categorie::class);
     }
 }
